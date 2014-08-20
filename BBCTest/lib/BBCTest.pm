@@ -48,7 +48,7 @@ get '/video' => sub {
     $ua->post($xml_data->{history}{href}, vidauth => $resp);
 
     if (param('fmt') // '' eq 'base64') {
-        content_type 'text/plain';
+        header 'content-transfer-encoding' => 'base64';
         $resp = encode_base64($resp);
     }
 
