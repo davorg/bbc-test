@@ -30,3 +30,7 @@ Some things I would have asked the product owner:
 
 All of these assumptions are hard-coded, but can easily be replaced when
 the questions are answered.
+
+(Oh, and I know that substituting variables in text string is a *terrible*
+way to generate XML. My next step would probably have been to replace that
+with XML::LibXML or something like that.)
