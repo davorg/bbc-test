@@ -7,4 +7,7 @@ get '/' => sub {
     template 'index';
 };
 
+get '/video' => sub {
+};
+
 true;
