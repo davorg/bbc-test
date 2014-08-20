@@ -5,7 +5,7 @@ use DateTime::Format::Strptime;
 use LWP::UserAgent;
 use XML::Simple;
 use Digest::SHA1 'sha1_hex';
-use Data::Dumper;
+use MIME::Base64;
 
 our $VERSION = '0.1';
 
@@ -46,6 +46,11 @@ get '/video' => sub {
     $resp =~ s/(sig=")/$1$sha1/;
 
     $ua->post($xml_data->{history}{href}, vidauth => $resp);
+
+    if (param('fmt') // '' eq 'base64') {
+        content_type 'text/plain';
+        $resp = encode_base64($resp);
+    }
 
     return $resp;
 };
