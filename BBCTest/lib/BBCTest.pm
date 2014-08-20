@@ -86,7 +86,7 @@ get '/video/auth/:id' => sub {
 </auth>];
 };
 
-get '/video/history/:id' => sub {
+post '/video/history/:id' => sub {
     my $id = param('id');
     content_type 'text/plain';
     return 'Thank you';
