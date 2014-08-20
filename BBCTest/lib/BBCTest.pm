@@ -2,8 +2,10 @@ package BBCTest;
 use Dancer ':syntax';
 use DateTime;
 use DateTime::Format::Strptime;
-use LWP::Simple ();
+use LWP::UserAgent;
 use XML::Simple;
+use Digest::SHA1 'sha1_hex';
+use Data::Dumper;
 
 our $VERSION = '0.1';
 
@@ -12,12 +14,17 @@ get '/' => sub {
 };
 
 get '/video' => sub {
-    content_type 'application/xml';
-    #content_type 'text/plain';
     my $id = param('id');
 
-    my $xml = LWP::Simple::get(uri_for("/video/auth/$id"));
-    my $xml_data = XMLin($xml);
+    my $ua = LWP::UserAgent->new;
+
+    my $auth_resp = $ua->get(uri_for("/video/auth/$id"));
+
+    return unless $auth_resp->is_success;
+
+    content_type 'application/xml';
+
+    my $xml_data = XMLin($auth_resp->content);
 
     my $dt_parser = DateTime::Format::Strptime->new({
         pattern => '%Y-%m-%dT%H:%M',
@@ -34,6 +41,13 @@ get '/video' => sub {
   <authid>$xml_data->{id}</authid>
   <available start="$start" end="$end"/>
 </vidauth>];
+
+    my $sha1 = sha1_hex($resp);
+    $resp =~ s/(sig=")/$1$sha1/;
+
+    $ua->post($xml_data->{history}{href}, vidauth => $resp);
+
+    return $resp;
 };
 
 get '/video/auth/:id' => sub {
@@ -52,12 +66,19 @@ get '/video/auth/:id' => sub {
     # for the authorisation id
     my $auth_id = int(rand 10_000);
 
+    my $history_uri = uri_for("/video/history/$id");
+
     return qq[<auth id="$auth_id">
 <start date="$start_date" time="$start_time" />
 <expireafter>$duration</expireafter>
-<history href="http://localhost/video/history/$id" />
+<history href="$history_uri" />
 </auth>];
 };
 
+get '/video/history/:id' => sub {
+    my $id = param('id');
+    content_type 'text/plain';
+    return 'Thank you';
+};
 
 true;
