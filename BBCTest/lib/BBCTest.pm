@@ -9,6 +9,8 @@ use MIME::Base64;
 
 our $VERSION = '0.1';
 
+set logger => 'file';
+
 get '/' => sub {
     template 'index';
 };
@@ -20,7 +22,9 @@ get '/video' => sub {
 
     my $auth_resp = $ua->get(uri_for("/video/auth/$id"));
 
-    return unless $auth_resp->is_success;
+    send_error('Not found', 404)      if $auth_resp->code == 404;
+    send_error('Not authorised', 403) if $auth_resp->code == 403;
+    send_error('Error', 500)          if $auth_resp->is_error;
 
     content_type 'application/xml';
 
@@ -46,6 +50,8 @@ get '/video' => sub {
     $resp =~ s/(sig=")/$1$sha1/;
 
     $ua->post($xml_data->{history}{href}, vidauth => $resp);
+
+    info "Successful authorisation for video $id ($xml_data->{id})";
 
     if (param('fmt') // '' eq 'base64') {
         header 'content-transfer-encoding' => 'base64';
