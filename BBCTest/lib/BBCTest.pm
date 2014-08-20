@@ -8,6 +8,8 @@ get '/' => sub {
 };
 
 get '/video' => sub {
+    my $id = param('id');
+    return $id;
 };
 
 true;
